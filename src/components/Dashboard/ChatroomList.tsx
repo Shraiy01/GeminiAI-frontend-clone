@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Search, Plus, Trash2, MessageSquare } from 'lucide-react';
-import { Chatroom } from '../../types';
-import { Button } from '../UI/Button';
-import { Input } from '../UI/Input';
-import { formatTimestamp } from '../../utils/helpers';
-import { ChatroomSkeleton } from '../UI/LoadingSkeleton';
+import React, { useEffect, useState } from "react";
+import { Search, Plus, Trash2, MessageSquare } from "lucide-react";
+import { Chatroom } from "../../types";
+import { Button } from "../UI/Button";
+import { Input } from "../UI/Input";
+import { formatTimestamp } from "../../utils/helpers";
+import { ChatroomSkeleton } from "../UI/LoadingSkeleton";
 
 interface ChatroomListProps {
   chatrooms: Chatroom[];
@@ -25,21 +25,38 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
   searchQuery,
   onSearchChange,
   selectedChatroomId,
-  isLoading = false
+  isLoading = false,
 }) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const handleDelete = (id: string) => {
-    if (deleteConfirmId === id) {
-      onDelete(id);
+  const [isDeleting, setIsDeleting] = useState<boolean | null>(false);
+  
+  useEffect(() => {
+    return () => {
       setDeleteConfirmId(null);
+    };
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    if (isDeleting) return;
+    if (deleteConfirmId === id) {
+      try {
+        setIsDeleting(true);
+        await onDelete(id);
+      } finally {
+        setIsDeleting(false);
+        setDeleteConfirmId(null);
+      }
     } else {
       setDeleteConfirmId(id);
-      // Reset confirmation after 3 seconds
-      setTimeout(() => setDeleteConfirmId(null), 3000);
+      const timer = setTimeout(() => {
+        if (deleteConfirmId === id) {
+          setDeleteConfirmId(null);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   };
-
   if (isLoading) {
     return (
       <div className="w-full max-w-md bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
@@ -80,7 +97,7 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
             <Plus className="w-4 h-4" />
           </Button>
         </div>
-        
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -97,7 +114,7 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
           <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
             <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-center">
-              {searchQuery ? 'No chatrooms found' : 'No chatrooms yet'}
+              {searchQuery ? "No chatrooms found" : "No chatrooms yet"}
             </p>
             {!searchQuery && (
               <p className="text-sm text-center mt-2">
@@ -113,9 +130,10 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
                 className={`
                   flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 
                   cursor-pointer transition-colors
-                  ${selectedChatroomId === chatroom.id 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500' 
-                    : ''
+                  ${
+                    selectedChatroomId === chatroom.id
+                      ? "bg-blue-50 dark:bg-blue-900/20 border-r-2 border-blue-500"
+                      : ""
                   }
                 `}
                 onClick={() => onSelect(chatroom)}
@@ -133,20 +151,26 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
                     {formatTimestamp(new Date(chatroom.createdAt))}
                   </p>
                 </div>
-                
+
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(chatroom.id);
                   }}
                   className={`
                     p-2 rounded-lg transition-colors
-                    ${deleteConfirmId === chatroom.id
-                      ? 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                      : 'text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+                    ${
+                      deleteConfirmId === chatroom.id
+                        ? "bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                        : "text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                     }
                   `}
-                  title={deleteConfirmId === chatroom.id ? 'Click again to confirm' : 'Delete chatroom'}
+                  title={
+                    deleteConfirmId === chatroom.id
+                      ? "Click again to confirm"
+                      : "Delete chatroom"
+                  }
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
