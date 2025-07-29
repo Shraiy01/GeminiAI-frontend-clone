@@ -42,14 +42,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </p>
         </div>
       </div>
-
-      {/* Messages */}
       <MessageList
         messages={messages}
         isTyping={isTyping}
       />
-
-      {/* Input */}
       <MessageInput
         onSendMessage={onSendMessage}
         disabled={isTyping}

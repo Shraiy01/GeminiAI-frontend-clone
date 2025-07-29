@@ -36,7 +36,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      // 5MB limit
       alert("Image size must be less than 5MB");
       return;
     }

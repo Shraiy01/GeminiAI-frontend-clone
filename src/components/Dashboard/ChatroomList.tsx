@@ -30,7 +30,7 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [isDeleting, setIsDeleting] = useState<boolean | null>(false);
-  
+
   useEffect(() => {
     return () => {
       setDeleteConfirmId(null);
@@ -39,24 +39,17 @@ export const ChatroomList: React.FC<ChatroomListProps> = ({
 
   const handleDelete = async (id: string) => {
     if (isDeleting) return;
-    if (deleteConfirmId === id) {
-      try {
-        setIsDeleting(true);
-        await onDelete(id);
-      } finally {
-        setIsDeleting(false);
-        setDeleteConfirmId(null);
-      }
-    } else {
-      setDeleteConfirmId(id);
-      const timer = setTimeout(() => {
-        if (deleteConfirmId === id) {
-          setDeleteConfirmId(null);
-        }
-      }, 3000);
-      return () => clearTimeout(timer);
+
+    try {
+      setIsDeleting(true);
+      await onDelete(id);
+    } catch (error) {
+      console.error("Failed to delete chatroom:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
+
   if (isLoading) {
     return (
       <div className="w-full max-w-md bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
